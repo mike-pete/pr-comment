@@ -1,0 +1,9 @@
+[
+  {
+    "file": "test-pr-comment.ts",
+    "line": 1,
+    "type": "single",
+    "content": "This is a new test PR comment for workflow validation",
+    "context": ""
+  }
+]
