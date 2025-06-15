@@ -27,6 +27,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+      - name: Fetch PR branch
+        run: git fetch origin "${{ github.head_ref }}:${{ github.head_ref }}"
       - name: Checkout PR branch by name
         run: git checkout "${{ github.head_ref }}"
       - name: Configure git
