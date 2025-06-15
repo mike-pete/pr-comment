@@ -1,3 +1,4 @@
+import { Octokit } from '@octokit/rest'
 import fs from 'fs'
 import path from 'path'
 
@@ -67,7 +68,40 @@ function removePRComments(filePath) {
 	fs.writeFileSync(filePath, content, 'utf8')
 }
 
-function main() {
+async function postPRComments(comments) {
+	const token = process.env.GITHUB_TOKEN
+	const prNumber = process.env.PR_NUMBER
+	const commitSha = process.env.COMMIT_SHA
+	const repo = process.env.GITHUB_REPOSITORY
+
+	if (!token || !prNumber || !commitSha || !repo) {
+		console.error('Missing required environment variables for posting PR comments.')
+		return
+	}
+
+	const [owner, repoName] = repo.split('/')
+	const octokit = new Octokit({ auth: token })
+
+	for (const comment of comments) {
+		try {
+			await octokit.pulls.createReviewComment({
+				owner,
+				repo: repoName,
+				pull_number: Number(prNumber),
+				commit_id: commitSha,
+				path: comment.file,
+				line: comment.line,
+				side: 'RIGHT',
+				body: comment.content,
+			})
+			console.log(`Posted comment to PR #${prNumber} on ${comment.file}:${comment.line}`)
+		} catch (err) {
+			console.error(`Failed to post comment on ${comment.file}:${comment.line}:`, err.message)
+		}
+	}
+}
+
+async function main() {
 	const exts = ['.ts', '.tsx']
 	const files = getAllFiles('.', exts)
 	let allResults = []
@@ -81,6 +115,9 @@ function main() {
 		removePRComments(file)
 	})
 	console.log('PR comments removed from code.')
+
+	// Post PR comments to GitHub (real)
+	await postPRComments(allResults)
 }
 
 main()
