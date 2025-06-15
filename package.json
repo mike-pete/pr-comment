@@ -7,5 +7,7 @@
 	"scripts": {
 		"pr-comment-bot": "node pr-comment-bot.js"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"@octokit/rest": "^22.0.0"
+	}
 }
