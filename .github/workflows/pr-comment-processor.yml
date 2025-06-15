@@ -1,0 +1,96 @@
+name: PR Comment Processor
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+    # Only run on JS/TS file changes to optimize performance
+    paths:
+      - '**.js'
+      - '**.jsx'
+      - '**.ts'
+      - '**.tsx'
+      - '**.mjs'
+      - '**.cjs'
+
+# Required permissions for the action to work
+permissions:
+  contents: write # To read files and commit changes
+  pull-requests: write # To create PR comments
+  repository-projects: read # To access repository information
+
+jobs:
+  process-pr-comments:
+    runs-on: ubuntu-latest
+
+    # Only run on pull requests, not on the default branch
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history to properly handle PR diffs
+          fetch-depth: 0
+          # Use the PR head ref so we can commit back to the PR branch
+          ref: ${{ github.head_ref }}
+          # Use a personal access token to ensure commits trigger workflows
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          echo "Dependencies installed successfully"
+
+      - name: Run PR Comment Processor
+        uses: ./
+        with:
+          # GitHub token for API access
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # PR number for context
+          pr-number: ${{ github.event.number }}
+          # Repository information
+          repository: ${{ github.repository }}
+          # Base and head SHA for diff calculation
+          base-sha: ${{ github.event.pull_request.base.sha }}
+          head-sha: ${{ github.event.pull_request.head.sha }}
+          branch-name: ${{ github.head_ref }}
+        env:
+          # Additional environment variables
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: true
+
+      - name: Commit processed files
+        run: |
+          # Configure git for automated commits
+          git config --local user.email "action@github.com"
+          git config --local user.name "PR Comment Processor"
+
+          # Check if there are any changes to commit
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            echo "Committing processed files..."
+            git add .
+            git commit -m "🤖 Process PR comments
+
+            Automatically processed PR comments:
+            - Removed // PR: and /* PR: */ comments from code
+            - Created corresponding PR review comments
+            
+            This commit was made by the PR Comment Processor GitHub Action."
+            
+            git push origin ${{ github.head_ref }}
+            echo "Changes committed and pushed successfully"
+          fi
+
+      - name: Summary
+        run: |
+          echo "✅ PR Comment Processor completed successfully"
+          echo "📝 Check the PR for new review comments"
+          echo "🔄 Modified files have been committed back to the PR branch"

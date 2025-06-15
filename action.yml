@@ -1,0 +1,48 @@
+name: 'PR Comment Processor'
+description: 'Automatically extract PR comments from code and create GitHub PR review comments'
+author: 'GitHub Actions'
+
+# Define the inputs for the action
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  pr-number:
+    description: 'Pull request number'
+    required: true
+  repository:
+    description: 'Repository in format owner/repo'
+    required: true
+  base-sha:
+    description: 'Base SHA for diff calculation'
+    required: true
+  head-sha:
+    description: 'Head SHA for diff calculation'
+    required: true
+  comment-prefix:
+    description: 'Comment prefix to look for (default: "PR:")'
+    required: false
+    default: 'PR:'
+  dry-run:
+    description: 'Run in dry-run mode (no actual changes)'
+    required: false
+    default: 'false'
+
+# Define the outputs
+outputs:
+  comments-found:
+    description: 'Number of PR comments found and processed'
+  files-modified:
+    description: 'Number of files that were modified'
+  pr-comments-created:
+    description: 'Number of PR review comments created'
+
+# Configure the runtime environment
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+# Icon and color for the GitHub Marketplace
+branding:
+  icon: 'message-circle'
+  color: 'blue'
