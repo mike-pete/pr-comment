@@ -137,8 +137,8 @@ async function main() {
 		// Write PR comments to marker file
 		fs.writeFileSync(PR_COMMENTS_FILE, JSON.stringify(allResults, null, 2), 'utf8')
 		console.log(`Wrote PR comment data to ${PR_COMMENTS_FILE}`)
-		// Exit with 0 so the workflow can commit/push and trigger a new run
-		return
+		// Exit with code 0 to ensure workflow continues
+		process.exit(0)
 	}
 
 	// Stage 2: If marker file exists and no PR comments are present, post them
@@ -160,11 +160,12 @@ async function main() {
 		// Remove marker file
 		fs.unlinkSync(PR_COMMENTS_FILE)
 		console.log(`Removed marker file ${PR_COMMENTS_FILE}`)
-		return
+		process.exit(0)
 	}
 
 	// Nothing to do
 	console.log('No PR comments found and no marker file present.')
+	process.exit(0)
 }
 
 main()
