@@ -57,12 +57,12 @@ function detectPRComments(fileContent, options = {}) {
  */
 function findCommentsInLine(line, lineNumber, lineStartIndex, options) {
     const comments = [];
-    // Handle single-line comments (// PR: ...)
+    // Handle single-line comments (
     if (options.includeSingleLine) {
         const singleLineComments = findSingleLineComments(line, lineNumber, lineStartIndex, options);
         comments.push(...singleLineComments);
     }
-    // Handle multi-line comments on single line (/* PR: ... */)
+    // Handle multi-line comments on single line ()
     if (options.includeMultiline) {
         const inlineMultiComments = findInlineMultiComments(line, lineNumber, lineStartIndex, options);
         comments.push(...inlineMultiComments);
@@ -70,7 +70,7 @@ function findCommentsInLine(line, lineNumber, lineStartIndex, options) {
     return comments;
 }
 /**
- * Finds single-line PR comments (// PR: ...)
+ * Finds single-line PR comments (
  */
 function findSingleLineComments(line, lineNumber, lineStartIndex, options) {
     const comments = [];
