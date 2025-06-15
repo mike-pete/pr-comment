@@ -27,6 +27,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+      - name: Checkout PR branch by name
+        run: git checkout "${{ github.head_ref }}"
       - name: Configure git
         run: |
           git config --global user.name "github-actions[bot]"
@@ -35,4 +37,4 @@ jobs:
         run: |
           git add .
           git diff --cached --quiet || git commit -m "chore: remove PR comments from code via automation"
-          git push
+          git push origin HEAD:${{ github.head_ref }}
