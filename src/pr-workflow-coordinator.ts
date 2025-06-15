@@ -17,6 +17,7 @@ export interface WorkflowOptions {
   prNumber: number;
   baseSha: string;
   headSha: string;
+  branchName: string;
   commentPrefix?: string;
   dryRun?: boolean;
   skipFileCommits?: boolean;
@@ -250,8 +251,8 @@ export class PRWorkflowCoordinator {
       const totalComments = modifiedFiles.reduce((sum, file) => sum + file.comments.length, 0);
       const commitMessage = this.generateCommitMessage(modifiedFiles.length, totalComments);
 
-      // Use the file processor's updateFiles method
-      await this.fileProcessor.updateFiles(modifiedFiles, commitMessage);
+      // Use the file processor's updateFiles method, pass branch name
+      await this.fileProcessor.updateFiles(modifiedFiles, commitMessage, this.options.branchName);
 
       result.filesCommitted = modifiedFiles.length;
       core.info(`✅ Successfully committed ${modifiedFiles.length} files`);

@@ -70,11 +70,11 @@ export declare class FileProcessor {
     /**
      * Update file content in the repository
      */
-    updateFile(file: PRFile, commitMessage: string): Promise<void>;
+    updateFile(file: PRFile, commitMessage: string, branch: string): Promise<void>;
     /**
      * Update multiple files in batch
      */
-    updateFiles(files: PRFile[], baseCommitMessage: string): Promise<void>;
+    updateFiles(files: PRFile[], baseCommitMessage: string, branch: string): Promise<void>;
 }
 /**
  * Helper function to create a FileProcessor instance

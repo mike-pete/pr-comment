@@ -12,6 +12,7 @@ export interface WorkflowOptions {
     prNumber: number;
     baseSha: string;
     headSha: string;
+    branchName: string;
     commentPrefix?: string;
     dryRun?: boolean;
     skipFileCommits?: boolean;

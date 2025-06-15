@@ -68,7 +68,7 @@ class FileProcessor {
             totalComments: 0,
             totalFilesModified: 0,
             skippedFiles: [],
-            errors: []
+            errors: [],
         };
         try {
             core.info('🔍 Getting PR file changes...');
@@ -76,7 +76,7 @@ class FileProcessor {
             const changedFiles = await this.getPRFiles();
             core.info(`📁 Found ${changedFiles.length} changed files in PR`);
             // Filter for supported file types
-            const supportedFiles = changedFiles.filter(file => this.isSupportedFile(file.filename) && file.status !== 'removed');
+            const supportedFiles = changedFiles.filter((file) => this.isSupportedFile(file.filename) && file.status !== 'removed');
             core.info(`✅ ${supportedFiles.length} JavaScript/TypeScript files to process`);
             if (supportedFiles.length === 0) {
                 core.info('📝 No JavaScript/TypeScript files to process');
@@ -134,16 +134,16 @@ class FileProcessor {
                 owner,
                 repo,
                 pull_number: this.options.prNumber,
-                per_page: 100 // GitHub's max per page
+                per_page: 100, // GitHub's max per page
             });
-            return files.map(file => ({
+            return files.map((file) => ({
                 filename: file.filename,
                 status: file.status,
                 sha: file.sha || '',
                 additions: file.additions || 0,
                 deletions: file.deletions || 0,
                 changes: file.changes || 0,
-                patch: file.patch
+                patch: file.patch,
             }));
         }
         catch (error) {
@@ -160,7 +160,7 @@ class FileProcessor {
         const originalContent = await this.getFileContent(file.filename, this.options.headSha);
         // Detect PR comments
         const comments = (0, comment_detector_1.detectPRComments)(originalContent, {
-            commentPrefix: this.options.commentPrefix || 'PR:'
+            commentPrefix: this.options.commentPrefix || 'PR:',
         });
         core.info(`   💬 Found ${comments.length} PR comments`);
         // Remove comments to create modified content
@@ -173,12 +173,12 @@ class FileProcessor {
             filename: file.filename,
             status: file.status,
             additions: 0, // Will be filled from GitHub API
-            deletions: 0, // Will be filled from GitHub API  
+            deletions: 0, // Will be filled from GitHub API
             changes: 0, // Will be filled from GitHub API
             sha: file.sha,
             originalContent,
             modifiedContent,
-            comments
+            comments,
         };
     }
     /**
@@ -191,7 +191,7 @@ class FileProcessor {
                 owner,
                 repo,
                 path: filename,
-                ref: sha
+                ref: sha,
             });
             // Handle file content (data can be file or directory)
             if (Array.isArray(data)) {
@@ -223,7 +223,7 @@ class FileProcessor {
     /**
      * Update file content in the repository
      */
-    async updateFile(file, commitMessage) {
+    async updateFile(file, commitMessage, branch) {
         if (this.options.dryRun) {
             core.info(`🔄 [DRY RUN] Would update file: ${file.filename}`);
             return;
@@ -239,7 +239,7 @@ class FileProcessor {
                 owner,
                 repo,
                 path: file.filename,
-                ref: this.options.headSha
+                ref: this.options.headSha,
             });
             if (Array.isArray(currentFile) || currentFile.type !== 'file') {
                 throw new Error(`Cannot update ${file.filename} - not a file`);
@@ -252,7 +252,7 @@ class FileProcessor {
                 message: commitMessage,
                 content: Buffer.from(file.modifiedContent).toString('base64'),
                 sha: currentFile.sha,
-                branch: this.options.headSha
+                branch: branch,
             });
             core.info(`✅ Updated file: ${file.filename}`);
         }
@@ -265,7 +265,7 @@ class FileProcessor {
     /**
      * Update multiple files in batch
      */
-    async updateFiles(files, baseCommitMessage) {
+    async updateFiles(files, baseCommitMessage, branch) {
         if (!files.length) {
             core.info('📝 No files to update');
             return;
@@ -276,7 +276,7 @@ class FileProcessor {
                 const commitMessage = `${baseCommitMessage}
 
 - ${file.filename}: Removed ${file.comments.length} PR comment(s)`;
-                await this.updateFile(file, commitMessage);
+                await this.updateFile(file, commitMessage, branch);
             }
         }
         core.info(`✅ File updates complete`);

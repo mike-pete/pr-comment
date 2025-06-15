@@ -30249,7 +30249,7 @@ class FileProcessor {
             totalComments: 0,
             totalFilesModified: 0,
             skippedFiles: [],
-            errors: []
+            errors: [],
         };
         try {
             core.info('🔍 Getting PR file changes...');
@@ -30257,7 +30257,7 @@ class FileProcessor {
             const changedFiles = await this.getPRFiles();
             core.info(`📁 Found ${changedFiles.length} changed files in PR`);
             // Filter for supported file types
-            const supportedFiles = changedFiles.filter(file => this.isSupportedFile(file.filename) && file.status !== 'removed');
+            const supportedFiles = changedFiles.filter((file) => this.isSupportedFile(file.filename) && file.status !== 'removed');
             core.info(`✅ ${supportedFiles.length} JavaScript/TypeScript files to process`);
             if (supportedFiles.length === 0) {
                 core.info('📝 No JavaScript/TypeScript files to process');
@@ -30315,16 +30315,16 @@ class FileProcessor {
                 owner,
                 repo,
                 pull_number: this.options.prNumber,
-                per_page: 100 // GitHub's max per page
+                per_page: 100, // GitHub's max per page
             });
-            return files.map(file => ({
+            return files.map((file) => ({
                 filename: file.filename,
                 status: file.status,
                 sha: file.sha || '',
                 additions: file.additions || 0,
                 deletions: file.deletions || 0,
                 changes: file.changes || 0,
-                patch: file.patch
+                patch: file.patch,
             }));
         }
         catch (error) {
@@ -30341,7 +30341,7 @@ class FileProcessor {
         const originalContent = await this.getFileContent(file.filename, this.options.headSha);
         // Detect PR comments
         const comments = (0, comment_detector_1.detectPRComments)(originalContent, {
-            commentPrefix: this.options.commentPrefix || 'PR:'
+            commentPrefix: this.options.commentPrefix || 'PR:',
         });
         core.info(`   💬 Found ${comments.length} PR comments`);
         // Remove comments to create modified content
@@ -30354,12 +30354,12 @@ class FileProcessor {
             filename: file.filename,
             status: file.status,
             additions: 0, // Will be filled from GitHub API
-            deletions: 0, // Will be filled from GitHub API  
+            deletions: 0, // Will be filled from GitHub API
             changes: 0, // Will be filled from GitHub API
             sha: file.sha,
             originalContent,
             modifiedContent,
-            comments
+            comments,
         };
     }
     /**
@@ -30372,7 +30372,7 @@ class FileProcessor {
                 owner,
                 repo,
                 path: filename,
-                ref: sha
+                ref: sha,
             });
             // Handle file content (data can be file or directory)
             if (Array.isArray(data)) {
@@ -30404,7 +30404,7 @@ class FileProcessor {
     /**
      * Update file content in the repository
      */
-    async updateFile(file, commitMessage) {
+    async updateFile(file, commitMessage, branch) {
         if (this.options.dryRun) {
             core.info(`🔄 [DRY RUN] Would update file: ${file.filename}`);
             return;
@@ -30420,7 +30420,7 @@ class FileProcessor {
                 owner,
                 repo,
                 path: file.filename,
-                ref: this.options.headSha
+                ref: this.options.headSha,
             });
             if (Array.isArray(currentFile) || currentFile.type !== 'file') {
                 throw new Error(`Cannot update ${file.filename} - not a file`);
@@ -30433,7 +30433,7 @@ class FileProcessor {
                 message: commitMessage,
                 content: Buffer.from(file.modifiedContent).toString('base64'),
                 sha: currentFile.sha,
-                branch: this.options.headSha
+                branch: branch,
             });
             core.info(`✅ Updated file: ${file.filename}`);
         }
@@ -30446,7 +30446,7 @@ class FileProcessor {
     /**
      * Update multiple files in batch
      */
-    async updateFiles(files, baseCommitMessage) {
+    async updateFiles(files, baseCommitMessage, branch) {
         if (!files.length) {
             core.info('📝 No files to update');
             return;
@@ -30457,7 +30457,7 @@ class FileProcessor {
                 const commitMessage = `${baseCommitMessage}
 
 - ${file.filename}: Removed ${file.comments.length} PR comment(s)`;
-                await this.updateFile(file, commitMessage);
+                await this.updateFile(file, commitMessage, branch);
             }
         }
         core.info(`✅ File updates complete`);
@@ -30534,36 +30534,49 @@ async function run() {
         const repository = core.getInput('repository', { required: true });
         const baseSha = core.getInput('base-sha', { required: true });
         const headSha = core.getInput('head-sha', { required: true });
-        const commentPrefix = core.getInput('comment-prefix') || 'PR:';
-        const dryRun = core.getInput('dry-run') === 'true';
+        const branchName = core.getInput('branch-name', { required: false }) || process.env['GITHUB_HEAD_REF'];
+        const commentPrefix = core.getInput('comment-prefix', { required: false }) || 'PR:';
+        const dryRun = core.getInput('dry-run', { required: false }) === 'true';
+        const skipFileCommits = core.getInput('skip-file-commits', { required: false }) === 'true';
+        const skipPRComments = core.getInput('skip-pr-comments', { required: false }) === 'true';
         // Log the inputs for debugging (excluding sensitive data)
         core.info('🚀 PR Comment Processor starting...');
         core.info(`   Repository: ${repository}`);
         core.info(`   PR Number: ${prNumber}`);
         core.info(`   Base SHA: ${baseSha}`);
         core.info(`   Head SHA: ${headSha}`);
+        core.info(`   Branch Name: ${branchName}`);
         core.info(`   Comment Prefix: ${commentPrefix}`);
         core.info(`   Dry Run: ${dryRun}`);
+        core.info(`   Skip File Commits: ${skipFileCommits}`);
+        core.info(`   Skip PR Comments: ${skipPRComments}`);
         // Validate inputs
         if (isNaN(prNumber) || prNumber <= 0) {
             throw new Error(`Invalid PR number: ${core.getInput('pr-number')}. Must be a positive integer.`);
         }
+        if (!branchName) {
+            throw new Error('branchName (PR branch) is required but was not provided.');
+        }
         // Execute the complete workflow
-        const result = await (0, pr_workflow_coordinator_1.executeWorkflow)({
+        const options = {
             githubToken,
             repository,
             prNumber,
             baseSha,
             headSha,
+            branchName,
             commentPrefix,
-            dryRun
-        });
+            dryRun,
+            skipFileCommits,
+            skipPRComments,
+        };
+        const result = await (0, pr_workflow_coordinator_1.executeWorkflow)(options);
         // Set final action result
         if (result.success) {
             core.info('✅ PR Comment Processor completed successfully! 🎉');
         }
         else {
-            core.setFailed(`❌ PR Comment Processor failed with ${result.errors.length} error(s)`);
+            core.setFailed('PR Comment Processor failed with errors.');
             // Log errors for debugging
             for (const error of result.errors) {
                 core.error(`${error.phase}: ${error.error}`);
@@ -30573,7 +30586,7 @@ async function run() {
         core.setOutput('workflow-result', JSON.stringify({
             success: result.success,
             summary: result.summary,
-            errorCount: result.errors.length
+            errorCount: result.errors.length,
         }));
     }
     catch (error) {
@@ -31174,8 +31187,8 @@ class PRWorkflowCoordinator {
             // Create commit message
             const totalComments = modifiedFiles.reduce((sum, file) => sum + file.comments.length, 0);
             const commitMessage = this.generateCommitMessage(modifiedFiles.length, totalComments);
-            // Use the file processor's updateFiles method
-            await this.fileProcessor.updateFiles(modifiedFiles, commitMessage);
+            // Use the file processor's updateFiles method, pass branch name
+            await this.fileProcessor.updateFiles(modifiedFiles, commitMessage, this.options.branchName);
             result.filesCommitted = modifiedFiles.length;
             core.info(`✅ Successfully committed ${modifiedFiles.length} files`);
             return result;
