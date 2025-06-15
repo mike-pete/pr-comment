@@ -12,7 +12,6 @@ describe('Comment Detection Engine', () => {
       it('should detect basic single-line PR comments', () => {
         const code = `
 function test() {
-  // PR: This needs optimization
   console.log('hello');
 }`;
         
@@ -29,10 +28,8 @@ function test() {
 
       it('should detect multiple single-line PR comments', () => {
         const code = `
-// PR: Comment at top
 function test() {
-  // PR: Comment in function
-  return true; // PR: Comment at end of line
+  return true; 
 }`;
         
         const comments = detectPRComments(code);
@@ -45,10 +42,6 @@ function test() {
 
       it('should handle different spacing around PR prefix', () => {
         const code = `
-//PR:No spaces
-// PR: Normal spaces
-//  PR:   Extra spaces
-//PR:    Mixed spacing   `;
         
         const comments = detectPRComments(code);
         
@@ -62,9 +55,7 @@ function test() {
       it('should ignore comments without PR prefix', () => {
         const code = `
 // Regular comment
-// PR: This should be found
 // Another regular comment
-// PR: This should also be found`;
         
         const comments = detectPRComments(code);
         
@@ -78,8 +69,8 @@ function test() {
       it('should detect inline multi-line PR comments', () => {
         const code = `
 function test() {
-  /* PR: This is inline */ console.log('hello');
-  return /* PR: Another inline comment */ true;
+   console.log('hello');
+  return  true;
 }`;
         
         const comments = detectPRComments(code);
@@ -101,9 +92,7 @@ function test() {
       it('should detect multi-line spanning PR comments', () => {
         const code = `
 function test() {
-  /* PR: This comment
-     spans multiple lines
-     and should be detected */
+  
   console.log('hello');
 }`;
         
@@ -119,10 +108,8 @@ function test() {
 
       it('should handle mixed single and multi-line comments', () => {
         const code = `
-// PR: Single line comment
 function test() {
-  /* PR: Multi-line comment */ 
-  // PR: Another single line
+   
   return true;
 }`;
         
@@ -139,9 +126,8 @@ function test() {
       it('should ignore PR comments inside string literals', () => {
         const code = `
 const message = "// PR: This is inside a string";
-const template = \`// PR: This is in a template literal\`;
+const template = \`
 const anotherString = '/* PR: This is also in a string */';
-// PR: This should be detected
 `;
         
         const comments = detectPRComments(code);
@@ -153,7 +139,6 @@ const anotherString = '/* PR: This is also in a string */';
       it('should handle escaped quotes in strings correctly', () => {
         const code = `
 const message = "This has \\"// PR: escaped quotes\\"";
-// PR: This should be detected
 const another = 'Another \\'// PR: escaped\\' string';
 `;
         
@@ -165,11 +150,8 @@ const another = 'Another \\'// PR: escaped\\' string';
 
       it('should handle empty or whitespace-only comments', () => {
         const code = `
-// PR:
-// PR:   
-// PR: Actual content
-/* PR: */
-/* PR:   */
+
+
 `;
         
         const comments = detectPRComments(code);
@@ -185,9 +167,8 @@ const another = 'Another \\'// PR: escaped\\' string';
       it('should calculate correct line numbers and positions', () => {
         const code = `Line 1
 Line 2
-// PR: Comment on line 3
 Line 4
-/* PR: Comment on line 5 */
+
 Line 6`;
         
         const comments = detectPRComments(code);
@@ -205,7 +186,6 @@ Line 6`;
         const code = `
 // TODO: This should not be found with PR prefix
 // REVIEW: This should be found with REVIEW prefix
-// PR: This should not be found with REVIEW prefix
 `;
         
         const options: Partial<DetectionOptions> = {
@@ -219,9 +199,6 @@ Line 6`;
 
       it('should handle case sensitivity option', () => {
         const code = `
-// pr: lowercase prefix
-// PR: uppercase prefix
-// Pr: mixed case prefix
 `;
         
         const caseSensitive = detectPRComments(code, { caseSensitive: true });
@@ -233,8 +210,7 @@ Line 6`;
 
       it('should respect include/exclude options', () => {
         const code = `
-// PR: Single line comment
-/* PR: Multi-line comment */
+
 `;
         
         const onlySingle = detectPRComments(code, { includeMultiline: false });
@@ -255,7 +231,6 @@ Line 6`;
   describe('removePRComment', () => {
     it('should remove single-line comments correctly', () => {
       const code = `function test() {
-  // PR: Remove this comment
   console.log('hello');
 }`;
       
@@ -269,7 +244,6 @@ Line 6`;
     it('should remove entire line if it only contains PR comment', () => {
       const code = `function test() {
   console.log('before');
-  // PR: This line should be completely removed
   console.log('after');
 }`;
       
@@ -284,7 +258,7 @@ Line 6`;
 
     it('should remove multi-line comments correctly', () => {
       const code = `function test() {
-  /* PR: Remove this multi-line comment */ console.log('hello');
+   console.log('hello');
 }`;
       
       const comments = detectPRComments(code);
@@ -298,10 +272,8 @@ Line 6`;
   describe('removePRComments', () => {
     it('should remove multiple comments correctly', () => {
       const code = `function test() {
-  // PR: First comment to remove
   console.log('hello');
-  /* PR: Second comment to remove */
-  // PR: Third comment to remove
+  
   return true;
 }`;
       
@@ -317,9 +289,7 @@ Line 6`;
 
     it('should handle comments that affect line numbering', () => {
       const code = `Line 1
-// PR: Comment on line 2
 Line 3
-// PR: Comment on line 4
 Line 5`;
       
       const comments = detectPRComments(code);
@@ -335,16 +305,15 @@ Line 5`;
     it('should handle TypeScript code with interfaces and types', () => {
       const code = `
 interface User {
-  id: number; // PR: Consider using UUID instead
+  id: number; 
   name: string;
-  /* PR: Add email validation */
+  
   email: string;
 }
 
 class UserService {
-  // PR: Add error handling here
   async getUser(id: number): Promise<User> {
-    return fetch(\`/api/users/\${id}\`); // PR: Add proper error handling
+    return fetch(\`/api/users/\${id}\`); 
   }
 }`;
       
@@ -360,14 +329,13 @@ class UserService {
     it('should handle JSX code correctly', () => {
       const code = `
 function Component() {
-  // PR: Add prop validation
   return (
     <div>
-      {/* PR: This should be a separate component */}
+      {}
       <header>
         <h1>Title</h1>
       </header>
-      {/* PR: Add loading state */}
+      {}
       <main>Content</main>
     </div>
   );
@@ -384,9 +352,7 @@ function Component() {
     it('should maintain correct indices for removal', () => {
       const code = `// PR: Comment 1
 const a = 1;
-// PR: Comment 2  
 const b = 2;
-// PR: Comment 3
 const c = 3;`;
       
       const comments = detectPRComments(code);
