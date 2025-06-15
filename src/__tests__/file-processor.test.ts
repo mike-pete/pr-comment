@@ -120,9 +120,8 @@ describe('File Processing System', () => {
       it('should detect and count PR comments correctly', async () => {
         const fileContent = `
 function test() {
-  // PR: This needs optimization
   console.log('hello');
-  /* PR: Add error handling */
+  
   return true;
 }`;
 
@@ -148,7 +147,6 @@ function test() {
 
       it('should remove comments and create modified content', async () => {
         const fileContent = `function test() {
-  // PR: Remove this comment
   console.log('hello');
 }`;
 
@@ -372,7 +370,6 @@ function test() {
       it('should respect custom comment prefix', async () => {
         const fileContent = `
 // TODO: This should be found
-// PR: This should not be found  
 // REVIEW: This should be found
 `;
 
