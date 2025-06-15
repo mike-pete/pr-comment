@@ -31,6 +31,9 @@ jobs:
           else
             echo "found=false" >> $GITHUB_OUTPUT
           fi
+        shell: bash
+      - name: Debug print output variable
+        run: echo "pr_comments_found=${{ steps.check_pr_comments.outputs.found }}"
       - name: Upload PR comments artifact
         if: steps.check_pr_comments.outputs.found == 'true'
         uses: actions/upload-artifact@v4
@@ -57,6 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.clean-code.outputs.pr_comments_found == 'true'
     steps:
+      - name: Debug print job output variable
+        run: echo "pr_comments_found=${{ needs.clean-code.outputs.pr_comments_found }}"
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Set up Node.js
