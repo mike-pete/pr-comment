@@ -1,0 +1,11 @@
+{
+	"name": "pr-comment-bot",
+	"version": "1.0.0",
+	"description": "Scans TypeScript files for PR comments and posts them as GitHub PR comments.",
+	"main": "pr-comment-bot.js",
+	"type": "module",
+	"scripts": {
+		"pr-comment-bot": "node pr-comment-bot.js"
+	},
+	"dependencies": {}
+}
